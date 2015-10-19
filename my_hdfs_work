@@ -1,0 +1,773 @@
+# hiveQuery
+Using aws ec2 instance running on RHEL6 to run hadoop, Hive Query.
+copying 2008.csv file to hadoop and query the file in hive.
+data is semi-structured
+
+[ec2-user@ip-172-31-42-75 ~]$ ls
+data  hosts
+[ec2-user@ip-172-31-42-75 ~]$ cd data/
+[ec2-user@ip-172-31-42-75 data]$ ls
+2008.csv                     investment.csv              testData.zip
+acqui_for_the_yr_2014.csv    SensorFiles
+companies_amount_raised.csv  stock_volume_per_month.csv
+[ec2-user@ip-172-31-42-75 data]$ hadoop fs -put 2008.csv /user/root
+put: Permission denied: user=ec2-user, access=WRITE, inode="/user/root/2008.csv._COPYING_":root:supergroup:drwxr-xr-x
+[ec2-user@ip-172-31-42-75 data]$ hadoop fs -chown -R root:supergroup /user/root
+[ec2-user@ip-172-31-42-75 data]$ hadoop fs -put 2008.csv /user/root
+put: Permission denied: user=ec2-user, access=WRITE, inode="/user/root/2008.csv._COPYING_":root:supergroup:drwxr-xr-x
+[ec2-user@ip-172-31-42-75 data]$ chmod 777 2008.csv
+[ec2-user@ip-172-31-42-75 data]$ hadoop fs -put 2008.csv /user/root
+put: Permission denied: user=ec2-user, access=WRITE, inode="/user/root/2008.csv._COPYING_":root:supergroup:drwxr-xr-x
+[ec2-user@ip-172-31-42-75 data]$ sudo su
+[root@ip-172-31-42-75 data]# hadoop fs -put 2008.csv /user/root
+
+[root@ip-172-31-42-75 data]# 
+[root@ip-172-31-42-75 data]# hadoop fs -ls /user/root
+Found 4 items
+drwxr-xr-x   - root supergroup          0 2015-10-18 16:09 /user/root/.hiveJars
+-rw-r--r--   3 root supergroup  689413044 2015-10-18 21:43 /user/root/2008.csv
+-rw-r--r--   3 root supergroup    4376645 2015-10-13 14:45 /user/root/companies_amount_raised.csv
+-rw-r--r--   3 root supergroup    2767195 2015-10-08 14:56 /user/root/testData.zip
+[root@ip-172-31-42-75 data]# hadoop fs -chmod 755 /user/root/2008.csv
+[root@ip-172-31-42-75 data]# hadoop fs -ls /user/root
+Found 4 items
+drwxr-xr-x   - root supergroup          0 2015-10-18 16:09 /user/root/.hiveJars
+-rwxr-xr-x   3 root supergroup  689413044 2015-10-18 21:43 /user/root/2008.csv
+-rw-r--r--   3 root supergroup    4376645 2015-10-13 14:45 /user/root/companies_amount_raised.csv
+-rw-r--r--   3 root supergroup    2767195 2015-10-08 14:56 /user/root/testData.zip
+[root@ip-172-31-42-75 data]# hdfs fsck /user/root/2008.csv
+Connecting to namenode via http://ip-172-31-42-75.us-west-2.compute.internal:50070/fsck?ugi=root&path=%2Fuser%2Froot%2F2008.csv
+FSCK started by root (auth:SIMPLE) from /172.31.42.75 for path /user/root/2008.csv at Sun Oct 18 21:47:16 EDT 2015
+.
+/user/root/2008.csv:  Under replicated BP-206992830-172.31.42.75-1444161912234:blk_1073757374_16562. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s) and 0 decommissioning replica(s).
+
+/user/root/2008.csv:  Under replicated BP-206992830-172.31.42.75-1444161912234:blk_1073757375_16563. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s) and 0 decommissioning replica(s).
+
+/user/root/2008.csv:  Under replicated BP-206992830-172.31.42.75-1444161912234:blk_1073757376_16564. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s) and 0 decommissioning replica(s).
+
+/user/root/2008.csv:  Under replicated BP-206992830-172.31.42.75-1444161912234:blk_1073757377_16565. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s) and 0 decommissioning replica(s).
+
+/user/root/2008.csv:  Under replicated BP-206992830-172.31.42.75-1444161912234:blk_1073757378_16566. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s) and 0 decommissioning replica(s).
+
+/user/root/2008.csv:  Under replicated BP-206992830-172.31.42.75-1444161912234:blk_1073757379_16567. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s) and 0 decommissioning replica(s).
+Status: HEALTHY
+ Total size:	689413044 B
+ Total dirs:	0
+ Total files:	1
+ Total symlinks:		0
+ Total blocks (validated):	6 (avg. block size 114902174 B)
+ Minimally replicated blocks:	6 (100.0 %)
+ Over-replicated blocks:	0 (0.0 %)
+ Under-replicated blocks:	6 (100.0 %)
+ Mis-replicated blocks:		0 (0.0 %)
+ Default replication factor:	3
+ Average block replication:	2.0
+ Corrupt blocks:		0
+ Missing replicas:		6 (33.333332 %)
+ Number of data-nodes:		2
+ Number of racks:		1
+FSCK ended at Sun Oct 18 21:47:16 EDT 2015 in 5 milliseconds
+The filesystem under path '/user/root/2008.csv' is HEALTHY
+
+[root@ip-172-31-42-75 data]# hadoop fs -cat /user/root/2008.csv| tail -n 100
+2008,12,13,6,1132,1125,1408,1404,DL,1504,N951DL,156,159,135,4,7,TPA,LGA,1011,7,14,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1105,1115,1347,1431,DL,1505,N943DL,162,196,146,-44,-10,LGA,TPA,1011,4,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1510,1515,1743,1758,DL,1506,N943DL,153,163,134,-15,-5,TPA,LGA,1011,9,10,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1423,1430,1705,1744,DL,1507,N916DL,162,194,146,-39,-7,LGA,TPA,1011,5,11,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,605,605,1330,1342,DL,1510,N6709,265,277,239,-12,0,PDX,ATL,2172,10,16,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1525,1530,1638,1648,DL,1511,N386DA,73,78,51,-10,-5,CHS,ATL,259,13,9,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1159,1126,1908,1703,DL,1512,N6704Z,309,217,173,125,33,SLC,ATL,1589,24,112,0,,0,0,19,92,0,14
+2008,12,13,6,1648,1652,1800,1800,DL,1513,N665DN,72,68,43,0,-4,SAV,ATL,215,14,15,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1337,1345,1508,1517,DL,1514,N905DL,91,92,65,-9,-8,ATL,ORF,516,5,21,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1654,1659,1820,1835,DL,1515,N918DE,86,96,71,-15,-5,CMH,ATL,446,8,7,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,535,540,633,649,DL,1517,N618DL,58,69,44,-16,-5,JAX,ATL,270,4,10,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,912,917,1036,1034,DL,1519,N375DA,84,77,53,2,-5,CHS,ATL,259,20,11,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,636,640,809,813,DL,1521,N393DA,93,93,76,-4,-4,RDU,CVG,390,5,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,903,905,1051,1054,DL,1521,N393DA,288,289,273,-3,-2,CVG,SAN,1865,6,9,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1610,1615,1742,1756,DL,1524,N646DL,92,101,66,-14,-5,ATL,IND,432,9,17,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1412,1420,1604,1612,DL,1526,N602DL,112,112,87,-8,-8,PBI,ATL,545,12,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1535,1545,1828,1853,DL,1527,N3736C,113,128,91,-25,-10,MKE,ATL,669,9,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1712,1720,1906,1917,DL,1528,N616DL,114,117,84,-11,-8,PBI,ATL,545,17,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1100,1045,1350,1347,DL,1530,N920DL,110,122,91,3,15,MCI,ATL,692,7,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1216,1215,1416,1426,DL,1531,N964DL,120,131,95,-10,1,DTW,ATL,594,7,18,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,NA,1020,NA,1126,DL,1532,N995DL,NA,66,NA,NA,NA,SAV,ATL,215,NA,NA,1,A,0,NA,NA,NA,NA,NA
+2008,12,13,6,1758,1800,1921,1921,DL,1534,N617DL,83,81,51,0,-2,JAX,ATL,270,19,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1935,1940,2146,2202,DL,1535,N647DL,311,322,293,-16,-5,ATL,SMF,2092,3,15,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1904,1900,2111,2115,DL,1537,N3730B,247,255,230,-4,4,ATL,TUS,1541,4,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1200,1150,1924,1921,DL,1538,N6710E,264,271,238,3,10,PDX,ATL,2172,11,15,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1637,1643,1749,1756,DL,1539,N6701,72,73,46,-7,-6,JAX,ATL,270,15,11,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1841,1841,1858,1900,DL,1540,N980DL,77,79,61,-2,0,ATL,JAN,341,6,10,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,955,934,1215,1155,DL,1542,N912DE,140,141,114,20,21,ATL,BDL,859,6,20,0,,0,20,0,0,0,0
+2008,12,13,6,1726,1730,1751,1757,DL,1543,N921DL,85,87,66,-6,-4,ATL,MEM,332,6,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1149,1048,1351,1235,DL,1547,N907DE,122,107,90,76,61,PBI,ATL,545,16,16,0,,0,61,0,15,0,0
+2008,12,13,6,1325,1325,1435,1445,DL,1548,N379DA,70,80,53,-10,0,ATL,RDU,356,5,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,554,600,800,815,DL,1549,N920DE,66,75,48,-15,-6,MEM,ATL,332,6,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1053,1000,1218,1141,DL,1550,N977DL,85,101,66,37,53,ATL,IND,432,5,14,0,,0,37,0,0,0,0
+2008,12,13,6,710,715,820,829,DL,1551,N938DL,70,74,37,-9,-5,CAE,ATL,191,7,26,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,955,955,1207,1140,DL,1551,N938DL,192,165,140,27,0,ATL,MSP,906,6,46,0,,0,0,0,27,0,0
+2008,12,13,6,2017,2019,2129,2129,DL,1552,N918DE,72,70,35,0,-2,ATL,CLT,227,17,20,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1251,1210,1434,1400,DL,1553,N979DL,103,110,90,34,41,ORF,ATL,516,6,7,0,,0,0,0,0,0,34
+2008,12,13,6,540,540,905,847,DL,1554,N979DL,145,127,92,18,0,MCI,ATL,692,39,14,0,,0,0,0,18,0,0
+2008,12,13,6,1025,950,1218,1130,DL,1554,N979DL,113,100,68,48,35,ATL,ORF,516,4,41,0,,0,35,0,13,0,0
+2008,12,13,6,1329,1332,1427,1432,DL,1557,N921DL,58,60,38,-5,-3,ATL,SAV,215,7,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1705,1705,1859,1909,DL,1558,N901DE,114,124,96,-10,0,ATL,BUF,712,6,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1633,1635,1931,1926,DL,1559,N608DA,298,291,280,5,-2,TPA,SLC,1887,9,9,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,813,815,1300,1310,DL,1562,N917DE,167,175,144,-10,-2,ELP,ATL,1282,11,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1429,1355,1749,1729,DL,1563,N904DE,140,154,117,20,34,MSP,ATL,906,9,14,0,,0,20,0,0,0,0
+2008,12,13,6,1551,1556,1659,1706,DL,1566,N913DN,68,70,43,-7,-5,ATL,CLT,227,9,16,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1006,1007,1729,1641,DL,1568,N381DN,323,274,261,48,-1,SLC,EWR,1968,8,54,0,,0,0,0,48,0,0
+2008,12,13,6,1147,1150,1214,1228,DL,1569,N667DN,87,98,72,-14,-3,ATL,MSY,425,4,11,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,835,835,1008,947,DL,1571,N703TW,93,72,38,21,0,ATL,JAX,270,4,51,0,,0,0,0,21,0,0
+2008,12,13,6,1013,1010,1212,1220,DL,1573,N931DL,119,130,92,-8,3,DTW,ATL,594,9,18,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1009,1015,1156,1155,DL,1574,N992DL,107,100,68,1,-6,ATL,DAY,432,4,35,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,847,850,1047,1051,DL,1575,N3766,300,301,260,-4,-3,CVG,SEA,1964,6,34,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1926,1930,2313,2315,DL,1581,N3756,347,345,297,-2,-4,JFK,SLC,1989,12,38,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1930,1933,2037,2047,DL,1582,N3748Y,67,74,47,-10,-3,ATL,GSO,306,6,14,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1403,1405,1430,1428,DL,1583,N906DE,87,83,64,2,-2,ATL,MEM,332,10,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,740,740,854,852,DL,1585,N376DA,74,72,58,2,0,BOI,SLC,291,6,10,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,2006,1954,2133,2109,DL,1586,N3735D,87,75,50,24,12,SLC,BOI,291,4,33,0,,0,0,0,12,0,12
+2008,12,13,6,1834,1835,1957,1950,DL,1587,N378DA,143,135,111,7,-1,ATL,MCI,692,5,27,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,550,550,736,745,DL,1589,N908DL,106,115,86,-9,0,ORF,ATL,516,5,15,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1555,1555,1545,1548,DL,1590,N918DL,50,53,30,-3,0,ATL,BHM,134,4,16,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1057,1100,1230,1228,DL,1591,N980DL,93,88,67,2,-3,RDU,ATL,356,11,15,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1856,1855,2057,2056,DL,1592,N963DL,121,121,86,1,1,ATL,DTW,594,11,24,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1134,1134,1833,1855,DL,1594,N3765,239,261,220,-22,0,SFO,CVG,2036,6,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1146,1150,1326,1329,DL,1595,N602DL,100,99,78,-3,-4,ATL,PBI,545,6,16,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1602,1605,1702,1708,DL,1596,N977DL,60,63,36,-6,-3,ATL,SAV,215,8,16,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,555,600,735,724,DL,1597,N982DL,100,84,52,11,-5,SDF,ATL,321,28,20,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,2136,2140,2313,2324,DL,1599,N304DQ,97,104,67,-11,-4,ATL,PIT,526,8,22,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1337,1342,1443,1450,DL,1600,N386DA,66,68,45,-7,-5,ATL,CHS,259,7,14,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,612,610,845,900,DL,1601,N644DL,153,170,128,-15,2,BDL,ATL,859,12,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,945,948,1127,1055,DL,1601,N916DN,102,67,36,32,-3,ATL,SAV,215,5,61,0,,0,0,0,32,0,0
+2008,12,13,6,2114,2118,2217,2222,DL,1604,N633DL,63,64,36,-5,-4,ATL,SAV,215,8,19,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1625,1635,1744,1758,DL,1605,N907DE,79,83,46,-14,-10,CLT,ATL,227,12,21,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1254,1221,1420,1359,DL,1609,N977DL,86,98,64,21,33,IND,ATL,432,9,13,0,,0,0,0,0,0,21
+2008,12,13,6,1842,1845,1953,2006,DL,1610,N925DL,71,81,52,-13,-3,ATL,SDF,321,8,11,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1528,1500,1720,1642,DL,1611,N395DN,112,102,79,38,28,SLC,PHX,507,4,29,0,,0,16,0,10,0,12
+2008,12,13,6,1531,1522,1822,1823,DL,1612,N916DN,111,121,88,-1,9,MCI,ATL,692,9,14,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1910,1910,2017,2016,DL,1612,N927DA,67,66,38,1,0,ATL,CHS,259,5,24,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1441,1445,1604,1622,DL,1613,N973DL,83,97,65,-18,-4,IND,ATL,432,8,10,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,921,830,1112,1008,DL,1616,N907DE,111,98,82,64,51,ATL,PBI,545,8,21,0,,0,51,0,13,0,0
+2008,12,13,6,1435,1440,1701,1704,DL,1618,N914DL,86,84,56,-3,-5,MSY,ATL,425,20,10,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1750,1755,2010,2015,DL,1618,N914DL,140,140,113,-5,-5,ATL,BDL,859,7,20,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,706,710,850,837,DL,1619,N949DL,104,87,49,13,-4,LEX,ATL,303,23,32,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1552,1520,1735,1718,DL,1620,N905DE,43,58,27,17,32,HSV,ATL,151,9,7,0,,0,0,0,0,0,17
+2008,12,13,6,1250,1220,1617,1552,DL,1621,N938DL,147,152,120,25,30,MSP,ATL,906,9,18,0,,0,3,0,0,0,22
+2008,12,13,6,1033,1041,1255,1303,DL,1622,N935DL,82,82,58,-8,-8,MSY,ATL,425,9,15,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,840,843,1025,1021,DL,1624,N3738B,105,98,53,4,-3,SLC,DEN,391,6,46,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,810,815,1504,1526,DL,1625,N3742C,234,251,210,-22,-5,LAX,CVG,1900,7,17,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,547,545,646,650,DL,1627,N621DL,59,65,38,-4,2,SAV,ATL,215,8,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,848,850,1024,1005,DL,1628,N920DL,156,135,108,19,-2,ATL,MCI,692,4,44,0,,0,0,0,19,0,0
+2008,12,13,6,936,936,1114,1119,DL,1630,N653DL,98,103,70,-5,0,ATL,RSW,515,4,24,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,657,600,904,749,DL,1631,N3743H,127,109,78,75,57,RIC,ATL,481,15,34,0,,0,0,57,18,0,0
+2008,12,13,6,1007,847,1149,1010,DL,1631,N909DA,162,143,122,99,80,ATL,IAH,689,8,32,0,,0,1,0,19,0,79
+2008,12,13,6,638,640,808,753,DL,1632,N604DL,90,73,50,15,-2,JAX,ATL,270,14,26,0,,0,0,0,15,0,0
+2008,12,13,6,756,800,1032,1026,DL,1633,N642DL,96,86,56,6,-4,MSY,ATL,425,23,17,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,612,615,923,907,DL,1635,N907DA,131,112,103,16,-3,GEG,SLC,546,5,23,0,,0,0,0,16,0,0
+2008,12,13,6,749,750,901,859,DL,1636,N646DL,72,69,41,2,-1,SAV,ATL,215,20,11,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1002,959,1204,1150,DL,1636,N646DL,122,111,71,14,3,ATL,IAD,533,6,45,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,834,835,1021,1023,DL,1637,N908DL,167,168,139,-2,-1,ATL,SAT,874,5,23,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,655,700,856,856,DL,1638,N671DN,121,116,85,0,-5,PBI,ATL,545,24,12,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1251,1240,1446,1437,DL,1639,N646DL,115,117,89,9,11,IAD,ATL,533,13,13,0,,0,NA,NA,NA,NA,NA
+2008,12,13,6,1110,1103,1413,1418,DL,1641,N908DL,123,135,104,-5,7,SAT,ATL,874,8,11,0,,0,NA,NA,NA,NA,NA
+[root@ip-172-31-42-75 data]# hive
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+WARNING: Use "yarn jar" to launch YARN applications.
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+
+Logging initialized using configuration in file:/etc/hive/2.3.2.0-2950/0/hive-log4j.properties
+hive> !hadoop fs -ls / ;
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+Found 7 items
+drwxrwxrwx   - yarn   hadoop          0 2015-10-18 16:09 /app-logs
+drwxr-xr-x   - hdfs   hdfs            0 2015-10-06 16:17 /apps
+drwxr-xr-x   - hdfs   hdfs            0 2015-10-06 16:06 /hdp
+drwxr-xr-x   - mapred hdfs            0 2015-10-06 16:06 /mapred
+drwxrwxrwx   - mapred hadoop          0 2015-10-06 16:06 /mr-history
+drwxrwxrwx   - hdfs   hdfs            0 2015-10-06 16:19 /tmp
+drwxr-xr-x   - hdfs   hdfs            0 2015-10-13 22:14 /user
+
+hive> !hadoop fs -ls /user ;
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+Found 8 items
+drwx------   - accumulo  hdfs                0 2015-10-06 16:09 /user/accumulo
+drwxrwx---   - ambari-qa hdfs                0 2015-10-06 16:20 /user/ambari-qa
+drwxr-xr-x   - hcat      hdfs                0 2015-10-06 16:11 /user/hcat
+drwx------   - hive      hdfs                0 2015-10-06 16:11 /user/hive
+drwxr-xr-x   - mike      hadoop              0 2015-10-13 22:59 /user/mike
+drwxrwxr-x   - oozie     hdfs                0 2015-10-06 16:13 /user/oozie
+drwxr-xr-x   - root      supergroup          0 2015-10-18 21:43 /user/root
+drwxrwxr-x   - spark     hdfs                0 2015-10-06 16:06 /user/spark
+
+hive> !hadoop fs -ls /user/root ;
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+Found 4 items
+drwxr-xr-x   - root supergroup          0 2015-10-18 16:09 /user/root/.hiveJars
+-rwxr-xr-x   3 root supergroup  689413044 2015-10-18 21:43 /user/root/2008.csv
+-rw-r--r--   3 root supergroup    4376645 2015-10-13 14:45 /user/root/companies_amount_raised.csv
+-rw-r--r--   3 root supergroup    2767195 2015-10-08 14:56 /user/root/testData.zip
+
+hive> CREATE TABLE flight_data(
+    >    year INT,
+    >    month INT,
+    >    day INT,
+    >    day_of_week INT,
+    >    dep_time INT,
+    >    crs_dep_time INT,
+    >    arr_time INT,
+    >    crs_arr_time INT,
+    >    unique_carrier STRING,
+    >    flight_num INT,
+    >    tail_num STRING,
+    >    actual_elapsed_time INT,
+    >    crs_elapsed_time INT,
+    >    air_time INT,
+    >    arr_delay INT,
+    >    dep_delay INT,
+    >    origin STRING,
+    >    dest STRING,
+    >    distance INT,
+    >    taxi_in INT,
+    >    taxi_out INT,
+    >    cancelled INT,
+    >    cancellation_code STRING,
+    >    diverted INT,
+    >    carrier_delay STRING,
+    >    weather_delay STRING,
+    >    nas_delay STRING,
+    >    security_delay STRING,
+    >    late_aircraft_delay STRING
+    > )
+    > ROW FORMAT DELIMITED
+    > FIELDS TERMINATED BY ',';
+OK
+Time taken: 3.906 seconds
+hive> LOAD DATA LOCAL INPATH '2008.csv' OVERWRITE INTO TABLE flight_data;
+Loading data to table default.flight_data
+Table default.flight_data stats: [numFiles=1, numRows=0, totalSize=689413044, rawDataSize=0]
+OK
+Time taken: 17.153 seconds
+
+hive> show TABLES;
+OK
+flight_data
+Time taken: 0.309 seconds, Fetched: 1 row(s)
+
+hive> DESCRIBE flight_data;
+OK
+year                	int                 	                    
+month               	int                 	                    
+day                 	int                 	                    
+day_of_week         	int                 	                    
+dep_time            	int                 	                    
+crs_dep_time        	int                 	                    
+arr_time            	int                 	                    
+crs_arr_time        	int                 	                    
+unique_carrier      	string              	                    
+flight_num          	int                 	                    
+tail_num            	string              	                    
+actual_elapsed_time 	int                 	                    
+crs_elapsed_time    	int                 	                    
+air_time            	int                 	                    
+arr_delay           	int                 	                    
+dep_delay           	int                 	                    
+origin              	string              	                    
+dest                	string              	                    
+distance            	int                 	                    
+taxi_in             	int                 	                    
+taxi_out            	int                 	                    
+cancelled           	int                 	                    
+cancellation_code   	string              	                    
+diverted            	int                 	                    
+carrier_delay       	string              	                    
+weather_delay       	string              	                    
+nas_delay           	string              	                    
+security_delay      	string              	                    
+late_aircraft_delay 	string              	                    
+Time taken: 0.552 seconds, Fetched: 29 row(s)
+
+hive> SELECT * FROM flight_data LIMIT 10;
+OK
+2008	1	3	4	2003	1955	2211	2225	WN	335	N712SW	128	150	116	-14	8	IAD	TPA	810	4	80		0	NA	NA	NA	NA	NA
+2008	1	3	4	754	735	1002	1000	WN	3231	N772SW	128	145	113	2	19	IAD	TPA	810	5	10	0		0	NA	NA	NA	NA	NA
+2008	1	3	4	628	620	804	750	WN	448	N428WN	96	90	76	14	8	IND	BWI	515	3	17	0		0	NA	NA	NA	NA	NA
+2008	1	3	4	926	930	1054	1100	WN	1746	N612SW	88	90	78	-6	-4	IND	BWI	515	3	70		0	NA	NA	NA	NA	NA
+2008	1	3	4	1829	1755	1959	1925	WN	3920	N464WN	90	90	77	34	34	IND	BWI	515	3	10	0		0	2	0	0	0	32
+2008	1	3	4	1940	1915	2121	2110	WN	378	N726SW	101	115	87	11	25	IND	JAX	688	4	10	0		0	NA	NA	NA	NA	NA
+2008	1	3	4	1937	1830	2037	1940	WN	509	N763SW	240	250	230	57	67	IND	LAS	1591	3	70		0	10	0	0	0	47
+2008	1	3	4	1039	1040	1132	1150	WN	535	N428WN	233	250	219	-18	-1	IND	LAS	1591	7	70		0	NA	NA	NA	NA	NA
+2008	1	3	4	617	615	652	650	WN	11	N689SW	95	95	70	2	2	IND	MCI	451	6	19	0		0	NA	NA	NA	NA	NA
+2008	1	3	4	1620	1620	1639	1655	WN	810	N648SW	79	95	70	-16	0	IND	MCI	451	3	60		0	NA	NA	NA	NA	NA
+Time taken: 0.5 seconds, Fetched: 10 row(s)
+
+-----------------------------------------------------------------------------------------
+Query the table. Find average arrival delay for all flights departing SFO in January:
+---------------------------------------------------------------------------------------------
+hive> SELECT
+    >    avg(arr_delay)
+    > FROM
+    >    flight_data
+    > WHERE
+    >    month=1
+    >    AND origin='SFO';
+Query ID = root_20151018224725_246664a1-21ba-47d3-9666-044dec6d140a
+Total jobs = 1
+Launching Job 1 out of 1
+
+Status: Running (Executing on YARN cluster with App id application_1445116351021_0003)
+
+--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED     10         10        0        0       2       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 39.50 s    
+--------------------------------------------------------------------------------
+OK
+28.669403949068094   (average arrival delay for all flights departing SFO in january)
+Time taken: 42.474 seconds, Fetched: 1 row(s)
+hive> 
+
+------------------------------------------------------------------------------------
+Query the table. Find average arrival delay for all flights departing LAS in January
+------------------------------------------------------------------------------------
+hive> 
+    > SELECT
+    >    avg(arr_delay)
+    > FROM
+    >    flight_data
+    > WHERE
+    >    month=1
+    >    AND origin='LAS';
+Query ID = root_20151019002223_556c7fcc-59bf-40d6-b574-200869c48b11
+Total jobs = 1
+Launching Job 1 out of 1
+
+
+Status: Running (Executing on YARN cluster with App id application_1445116351021_0005)
+
+--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED     10         10        0        0       1       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 30.08 s    
+--------------------------------------------------------------------------------
+OK
+10.376584588836531 (average arrival delay for all flights departing LAS in january)
+Time taken: 30.745 seconds, Fetched: 1 row(s)
+hive> 
+
+
+Copy from local to hadoop airports.csv and use join on hive shell: run a join query to find the average delay in January 2008 for each airport and to print out the airport's name:
+
+k@kt:~/Desktop/showcase$ scp -rp -i as.pem airports.csv ec2-user@52.88.113.2:/home/ec2-user/data
+airports.csv                                          100%   58KB  57.5KB/s   00:00    
+k@kt:~/Desktop/showcase$ ssh -i as.pem ec2-user@52.88.113.2
+Last login: Sun Oct 18 21:33:44 2015 from 104-58-91-4.lightspeed.cicril.sbcglobal.net
+[ec2-user@ip-172-31-42-75 ~]$ sudo su
+[ec2-user@ip-172-31-42-75 ~]$ cd data
+[ec2-user@ip-172-31-42-75 data]$ ls
+2008.csv                   companies_amount_raised.csv  stock_volume_per_month.csv
+acqui_for_the_yr_2014.csv  investment.csv               testData.zip
+airports.csv               SensorFiles
+[ec2-user@ip-172-31-42-75 data]$ sudo su
+[root@ip-172-31-42-75 data]# hadoop fs -put airports.csv /user/root
+[root@ip-172-31-42-75 data]# hive
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+WARNING: Use "yarn jar" to launch YARN applications.
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+
+Logging initialized using configuration in file:/etc/hive/2.3.2.0-2950/0/hive-log4j.properties
+hive> !hadoop fs -ls /user/root
+    > ;
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/hadoop/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/hdp/2.3.2.0-2950/spark/lib/spark-assembly-1.4.1.2.3.2.0-2950-hadoop2.7.1.2.3.2.0-2950.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+Found 5 items
+drwxr-xr-x   - root supergroup          0 2015-10-18 16:09 /user/root/.hiveJars
+-rwxr-xr-x   3 root supergroup  689413044 2015-10-18 21:43 /user/root/2008.csv
+-rw-r--r--   3 root supergroup      58889 2015-10-18 23:28 /user/root/airports.csv
+-rw-r--r--   3 root supergroup    4376645 2015-10-13 14:45 /user/root/companies_amount_raised.csv
+-rw-r--r--   3 root supergroup    2767195 2015-10-08 14:56 /user/root/testData.zip
+
+hive> CREATE TABLE airports(
+    >    name STRING,
+    >    country STRING,
+    >    area_code INT,
+    >    code STRING)
+    > ROW FORMAT DELIMITED
+    > FIELDS TERMINATED BY ',';
+OK
+Time taken: 2.105 seconds
+hive> 
+    > LOAD DATA LOCAL INPATH 'airports.csv' OVERWRITE INTO TABLE airports;
+Loading data to table default.airports
+Table default.airports stats: [numFiles=1, numRows=0, totalSize=58889, rawDataSize=0]
+OK
+Time taken: 1.341 seconds
+
+hive> SELECT
+    >    *
+    > FROM
+    >    airports
+    > LIMIT 10;
+OK
+Key West Nas /Boca Chica Field (private U. S. Navy )	US	67	NQX
+A L Mangham Jr. Regional	US	67	OCH
+AAF Heliport	US	67	AYE
+Aberdeen Regional	US	67	ABR
+Abilene Regional	US	67	ABI
+Abraham Lincoln Capital	US	67	SPI
+Acadiana Regional	US	67	ARA
+Accomack County	US	67	MFV
+Ada Municial	US	67	ADT
+Adak Island Ns	US	67	ADK
+Time taken: 0.485 seconds, Fetched: 10 row(s)
+
+hive> SELECT
+    >    name,
+    >    AVG(arr_delay)
+    > FROM
+    >    flight_data f
+    >    INNER JOIN airports a
+    >    ON (f.origin=a.code)
+    > WHERE
+    >    month=1
+    > GROUP BY
+    >    name;
+Query ID = root_20151018233403_fd18bf9f-61dd-422b-a71a-2811eb54db41
+Total jobs = 1
+Launching Job 1 out of 1
+
+Status: Running (Executing on YARN cluster with App id application_1445116351021_0004)
+
+--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED     10         10        0        0       2       0
+Map 3 ..........   SUCCEEDED      1          1        0        0       0       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 03/03  [==========================>>] 100%  ELAPSED TIME: 39.74 s    
+--------------------------------------------------------------------------------
+OK
+Abilene Regional	15.013043478260869
+Abraham Lincoln Capital	42.75912408759124
+Adak Island Ns	-4.222222222222222
+Akron/canton Regional	10.701408450704225
+Albany International	7.412162162162162
+Albert J Ellis	6.441558441558442
+Albuquerque International	4.7077826725403815
+Alexandria International	15.923857868020304
+Arcata	41.61363636363637
+Asheville Regional	11.830645161290322
+Aspen	26.5869918699187
+Atlantic City International	6.103448275862069
+Augusta Regional	5.768421052631579
+Austin Straubel International	27.900990099009903
+Austin-bergstrom International	4.82597523943004
+Baltimore/Washington International Thurgood Marshall	4.869837296620776
+Bangor International Airport	19.065
+Bay County (Closed)	2.749034749034749
+Bellingham International	-6.666666666666667
+Bert Mooney Airport	4.590163934426229
+Bethel Airport	7.7439024390243905
+Bill and Hillary Clinton National/Adams Field	10.074548192771084
+Billings Logan International	4.6440677966101696
+Birmingham-Shuttlesworth International	9.850701402805612
+Bishop International	14.093209054593874
+Bismarck Municipal	1.6859903381642511
+Blue Grass	11.532503457814661
+Bob Hope	11.77543470218276
+Boise Air Terminal/Gowen Field	16.406460296096906
+Boundary Bay	23.26241134751773
+Bozeman Yellowstone International	22.1156462585034
+Bradley International	6.570018975332069
+Brunswick Golden Isles Airport	-0.1206896551724138
+Buffalo Niagara International	11.748849104859335
+Burlington International	14.003552397868562
+Capital Region International	26.03021148036254
+Cedar City Regional	21.26086956521739
+Central Illinois Regional Airport At Bloomington-normal	16.7027027027027
+Central Wisconsin	31.42105263157895
+Charleston AFB International	10.692520775623269
+Charlotte Douglas International	6.4406990068754775
+Charlottesville-Albemarle	4.871428571428571
+Cherry Capital	27.881533101045296
+Chicago Midway International	12.859635210150675
+Chicago O'hare International	27.593595701423176
+Chicago/Rockford International	2.3157894736842106
+Chico Municipal	41.75
+Cincinnati/Northern Kentucky International	10.093188268684957
+Cleveland-Hopkins International	10.752713178294574
+Colorado Springs	7.568213783403657
+Columbus Metropolitan	9.018518518518519
+Corpus Christi International Airport	3.8220338983050848
+Crested Butte Regional	45.875
+Cyril E King Airport	2.5163398692810457
+Dallas Love Field	6.249461439034898
+Dallas/Fort Worth International	9.144632378322402
+Dane County Regional	21.224765868886575
+Daytona Beach International	1.6145038167938932
+Denver International	11.363121756905498
+Des Moines International	16.73779527559055
+Detroit Metropolitan Wayne County	13.801015664115585
+Dothan Regional	10.210526315789474
+Dubuque Regional	19.46078431372549
+Duluth International	6.435897435897436
+Durango-La Plata County	4.327586206896552
+Eagle County Regional	18.26977687626775
+East Texas Regional	8.887640449438202
+Eastern Iowa	22.35930735930736
+Easterwood Field	9.123287671232877
+El Paso International	4.358291735995563
+Elko Regional	17.597014925373134
+Elmira Corning Regional	11.660377358490566
+Eppley Airfield	13.41659192825112
+Erie International	9.368421052631579
+Evansville Regional Airport	13.061946902654867
+Fairbanks International	0.12020460358056266
+Fanning Field	17.517241379310345
+Flagstaff Pulliam	7.267175572519084
+Florence Regional	4.375
+Fort Lauderdale/hollywood International	8.50298309579052
+Fort Smith Regional	4.728888888888889
+Fort Wayne International Airport	31.18200408997955
+Fresno Yosemite International	11.715097402597403
+Friedman Memorial	5.822857142857143
+Gainesville Regional	3.1925465838509317
+General Edward Lawrence Logan International	5.858861439312567
+General Mitchell International	16.12449799196787
+George Bush Intercontinental	9.636434663715086
+Gerald R. Ford International	17.722585924713584
+Glacier Park International	15.889952153110048
+Golden Triangle Regional	11.797297297297296
+Grand Forks International	15.56637168141593
+Grannis Field Regional	12.170731707317072
+Great Falls International	7.0046728971962615
+Greater Binghamton	13.101694915254237
+Greater Rochester International	10.262269938650308
+Greenville Spartanburg International Airport	13.070815450643776
+Gulfport-Biloxi International	9.70098730606488
+Harrisburg International	13.674603174603174
+Hartsfield-Jackson Atlanta International	7.943785440613027
+Hector International	18.4765625
+Helena Regional	7.628787878787879
+Henry E Rohlsen	10.675
+Hilo International	-2.9318766066838045
+Hilton Head	2.293103448275862
+Honolulu International	-1.0649235147634293
+Houghton County Memorial	31.363636363636363
+Huntsville International - Carl T. Jones Field	10.54524361948956
+Imperial County	7.353448275862069
+Indianapolis International	7.945868945868946
+Jack Brooks Regional	-7.368421052631579
+Jackson Hole	38.26640926640927
+Jackson-Evers International	6.0
+Jacksonville International	4.124305555555556
+James Cox Dayton Intl	9.700503355704697
+Joe Foss Field	19.814432989690722
+John F Kennedy International	3.465494325733565
+John Wayne	7.911041465766634
+Joslin Field - Magic Valley Regional	17.31304347826087
+Kahului	-0.13239573229873908
+Kalamazoo/Battle Creek	24.52901023890785
+Kansas City International Airport	7.418600401973324
+Kern County	4.506666666666667
+Ketchikan International	12.52
+Key Field	6.395833333333333
+Key West International	23.910112359550563
+Kodiak Airport	9.785714285714286
+Kona International Airport	1.4748091603053435
+La Crosse Municipal	24.32116788321168
+La Guardia	5.36539643515673
+La Palmdale Regional Airport	44.094339622641506
+Lafayette Regional	9.56392694063927
+Lake Charles Regional	4.40625
+Lambert-st. Louis International	7.6999807061547365
+Laredo International	13.823170731707316
+Lawton-Fort Sill Regional	11.217647058823529
+Lehigh Valley International	12.775456919060053
+Lewiston-Nez Perce County	4.8
+Lihue	-2.3208516886930983
+Lincoln	12.689795918367347
+Long Beach Municipal	6.153404429860541
+Long Island MacArthur	-0.6670403587443946
+Los Angeles International	11.392227867257594
+Louis Armstrong New Orléans International Airport	6.496923527688251
+Louisville International (Standiford Field)	11.794845881758464
+Lovell Field	7.1784702549575075
+Lubbock Preston Smith International	6.6709039548022595
+Luis Munoz Marin International	8.677056719468574
+MBS International	19.06
+Mahlon Sweet Field	23.721374045801525
+Manchester-boston Regional Airport	6.838485804416404
+Mathis Field	6.809917355371901
+Mc Allen Miller International	8.63953488372093
+Mc Carran International	10.376584588836531
+Mc Clellan-Palomar	7.1454545454545455
+Mc Namara Fld	63.075
+McGhee Tyson	11.833671399594321
+McNary Field	9.156862745098039
+Meadows Field	13.533854166666666
+Melbourne International	3.0875
+Memphis International	13.527935813274981
+Mercedita	-2.036363636363636
+Metropolitan Airport	12.423475258918296
+Miami International	15.078050567973616
+Michiana Regional	30.154666666666667
+Middle Georgia Regional	6.26984126984127
+Midland International	8.558419243986254
+Mineta San Jose International	7.446926229508197
+Minneapolis - St. Paul International	11.343321174222686
+Minot International	-5.440860215053763
+Missoula International	5.0793103448275865
+Mobile Regional	10.161228406909789
+Modesto City-Co-Harry Sham Field	21.865800865800868
+Monroe Regional	8.524663677130045
+Monterey Peninsula	13.948562783661119
+Montgomery Regional (Dannelly Field)	5.268370607028754
+Montrose Regional Airport	8.808988764044944
+Mudhole Smith	24.0
+Municipal	15.72197640117994
+Myrtle Beach Afb	1.7405247813411078
+Nashville International	6.882086167800454
+Natrona County International Airport	-0.47766323024054985
+Newark Liberty International	9.463444857496903
+Newport News/Williamsburg International	4.394004282655247
+Nome	-2.027027027027027
+Norfolk International	7.762002743484225
+Northwest Arkansas Regional	15.02659574468085
+Northwest Florida Regional	9.79491833030853
+Oakland International Airport	7.664073305670816
+Oneida County	9.653846153846153
+Ontario International	8.489149057681326
+Orlando International	5.862539827036868
+Outagamie County Regional	23.237057220708447
+Palm Beach International	5.45624313438301
+Palm Springs International	13.637314734088928
+Pellston Regional	48.285714285714285
+Pensacola Gulf Coast Regional	10.017711171662125
+Peoria International	26.38255033557047
+Petersburg James A Johnson	24.472727272727273
+Philadelphia International	3.033366533864542
+Phoenix Sky Harbor International Airport	4.101787459049371
+Piedmont Triad International	12.483430799220272
+Pittsburgh International	9.256280064136826
+Pocatello Regional	8.18
+Port Columbus International	8.599093264248705
+Portland International	6.275311203319502
+Portland International Jetport	10.584805653710248
+Preston-glenn Field	2.1176470588235294
+Prudhoe Bay/Deadhorse	5.983050847457627
+Quad City International	19.224184782608695
+Rafael Hernández	-5.379032258064516
+Raleigh-durham International	4.983125599232982
+Ralph Wien Memorial	1.381578947368421
+Rapid City Regional	0.3597560975609756
+Redding Municipal	38.29496402877698
+Regional	10.445635528330781
+Reno-Tahoe International	15.57085201793722
+Richmond International Airport	6.973651960784314
+Rick Husband Amarillo International	3.705211726384365
+Roanoke Regional (Woodrum Field)	12.242753623188406
+Robert Gray AAF	10.320588235294117
+Roberts Field	25.257731958762886
+Rochester International	23.78688524590164
+Rogue Valley International - Medford	21.473094170403588
+Ronald Reagan Washington National Airport	2.418849658314351
+Roswell International Air Center	4.403225806451613
+Ryan	11.417687074829932
+Sacramento International	8.734715690466011
+Salt Lake City International	15.059041807536902
+San Antonio International	6.46050246050246
+San Diego International	9.542431192660551
+San Francisco International	28.669403949068094
+San Luis County Regional Airport	12.535645472061658
+Santa Maria Pub/Capt G Allan Hancock	6.335664335664336
+Sarasota/Bradenton International	5.84812030075188
+Savannah/Hilton Head International	8.900627615062762
+Sawyer International	53.42857142857143
+Seattle-Tacoma International	8.705552907530983
+Sheppard AFB	7.606217616580311
+Simmons Nott	5.620689655172414
+Sioux Gateway	11.1875
+Sitka Rocky Gutierrez	8.674418604651162
+South Padre Is. Intl	12.853932584269662
+Southwest Florida International	3.4684719535783364
+Southwest Georgia Regional	15.010416666666666
+Spokane International	13.448275862068966
+Springfield-Branson National	22.44055944055944
+Stewart International	12.637813211845103
+Syracuse Hancock International	11.02579365079365
+T. F. Green State	4.485552115583076
+Tallahassee Regional	4.7011494252873565
+Tampa International	3.5917417417417417
+Ted Stevens Anchorage International	4.9961330239752515
+Telluride Regional	11.378378378378379
+Texarkana Regional-Webb Field	11.936363636363636
+Toledo Express	14.0
+Tri-Cities	5.935483870967742
+Tri-Cities Regional	3.231707317073171
+Tucson International	6.2253968253968255
+Tulsa International	8.675390035228988
+Tupelo Regional	-1.8
+Tyler Pounds Regional Airport	8.77304964539007
+University Of Illinois Willard	47.457013574660635
+University Park Airport	18.37037037037037
+Valdosta Regional	4.405063291139241
+Valley International	7.620865139949109
+Ventura County Camarillo	-1.7410714285714286
+Waco Regional	8.270408163265307
+Walker Field	9.220670391061452
+Washington Dulles International	13.39019517442754
+Waterloo Regional	15.1
+Westchester County	15.238210399032647
+Wichita Mid-Continent	11.836092715231787
+Wiley Post/W.Rogers M	4.75
+Wilkes-barre/scranton International	22.433673469387756
+Will Rogers World Airport	7.79559748427673
+William P Hobby	7.228734659331359
+Wilmington International	3.4597156398104265
+Wrangell SPB	14.982142857142858
+Yakima Air Terminal	17.25
+Yakutat	17.625
+Yampa Valley	18.2925
+Yeager	12.234309623430962
+Yellowstone Regional	-2.5824175824175826
+Yuma MCAS/Yuma International	8.438172043010752
+Time taken: 43.215 seconds, Fetched: 285 row(s)
+hive>
